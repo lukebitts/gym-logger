@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Background -->
+  <rect width="512" height="512" fill="#0a0a0a"/>
+
+  <!-- Dumbbell icon in yellow -->
+  <!-- Left collar -->
+  <rect x="60" y="210" width="48" height="92" rx="0" fill="#facc15"/>
+  <!-- Left plate outer -->
+  <rect x="36" y="188" width="28" height="136" rx="0" fill="#facc15"/>
+  <!-- Bar -->
+  <rect x="108" y="238" width="296" height="36" rx="0" fill="#facc15"/>
+  <!-- Right collar -->
+  <rect x="404" y="210" width="48" height="92" rx="0" fill="#facc15"/>
+  <!-- Right plate outer -->
+  <rect x="448" y="188" width="28" height="136" rx="0" fill="#facc15"/>
+
+  <!-- Black inset details for brutalist look -->
+  <rect x="64" y="218" width="40" height="76" rx="0" fill="#1a1a1a"/>
+  <rect x="408" y="218" width="40" height="76" rx="0" fill="#1a1a1a"/>
+  <rect x="64" y="218" width="40" height="76" rx="0" fill="none" stroke="#facc15" stroke-width="4"/>
+  <rect x="408" y="218" width="40" height="76" rx="0" fill="none" stroke="#facc15" stroke-width="4"/>
+</svg>
