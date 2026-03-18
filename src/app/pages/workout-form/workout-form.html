@@ -1,0 +1,209 @@
+<div class="min-h-screen bg-[#0a0a0a] text-white font-mono">
+
+  <!-- Header -->
+  <div class="border-b-4 border-yellow-400 px-6 py-5 flex items-center justify-between gap-4">
+    <div>
+      <p class="text-zinc-500 text-xs uppercase tracking-widest mb-1">// {{ editId() ? 'editing' : 'creating' }}</p>
+      <h1 class="text-3xl font-black uppercase tracking-tight text-yellow-400">
+        {{ editId() ? 'EDIT WORKOUT' : 'NEW WORKOUT' }}
+      </h1>
+    </div>
+    <button
+      (click)="cancel()"
+      class="border-2 border-zinc-600 text-zinc-400 hover:border-white hover:text-white px-5 py-3 text-xs uppercase font-bold transition-none min-h-[44px]"
+    >
+      ← BACK
+    </button>
+  </div>
+
+  <div class="p-6 flex flex-col gap-8">
+
+    <!-- Workout name section -->
+    <div>
+      <div class="flex items-center gap-4 mb-4">
+        <h2 class="text-xs font-black uppercase tracking-widest text-zinc-500 whitespace-nowrap">WORKOUT NAME</h2>
+        <div class="flex-1 border-t-2 border-zinc-800"></div>
+      </div>
+      <input
+        type="text"
+        [ngModel]="workoutName()"
+        (ngModelChange)="workoutName.set($event)"
+        placeholder="e.g. Push Day, Leg Day..."
+        class="w-full bg-[#111] border-4 border-zinc-700 focus:border-yellow-400 outline-none text-white font-mono px-4 py-3 text-xl font-bold uppercase placeholder:text-zinc-600 placeholder:normal-case placeholder:font-normal"
+      />
+    </div>
+
+    <!-- Exercises section -->
+    <div>
+      <!-- Section header -->
+      <div class="flex items-center gap-4 mb-5">
+        <h2 class="text-xs font-black uppercase tracking-widest text-zinc-500 whitespace-nowrap">EXERCISES</h2>
+        <div class="flex-1 border-t-2 border-zinc-800"></div>
+        <span class="text-xs font-mono text-zinc-600 whitespace-nowrap">{{ exercises().length }} added</span>
+        <button
+          (click)="openPicker()"
+          class="bg-yellow-400 text-black font-black uppercase px-5 py-3 border-4 border-yellow-400 hover:bg-black hover:text-yellow-400 transition-none text-xs tracking-wider min-h-[44px]"
+        >
+          + ADD EXERCISE
+        </button>
+      </div>
+
+      <!-- Empty state -->
+      @if (exercises().length === 0) {
+        <div class="border-4 border-dashed border-zinc-700 p-10 text-center">
+          <p class="text-zinc-500 uppercase text-sm font-bold tracking-widest">NO EXERCISES ADDED</p>
+          <p class="text-zinc-700 text-xs mt-2">Search the exercise database to build your workout</p>
+        </div>
+      }
+
+      <!-- Exercise cards -->
+      <div class="flex flex-col gap-5">
+        @for (ex of exercises(); track ex.exerciseId; let i = $index) {
+          <div class="border-2 border-zinc-700 bg-[#111]">
+
+            <!-- Index strip -->
+            <div class="bg-zinc-900 border-b-2 border-zinc-700 px-4 py-1.5 flex items-center gap-3">
+              <span class="text-xs font-black text-zinc-600 font-mono">{{ i + 1 < 10 ? '0' + (i + 1) : (i + 1) }}</span>
+              <div class="flex-1 border-t border-zinc-800"></div>
+              <!-- Reorder controls -->
+              <div class="flex gap-1">
+                <button
+                  (click)="moveUp(i)"
+                  [disabled]="i === 0"
+                  title="Move up"
+                  class="w-8 h-8 text-xs border-2 border-zinc-700 text-zinc-500 hover:border-zinc-400 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-none flex items-center justify-center font-bold"
+                >▲</button>
+                <button
+                  (click)="moveDown(i)"
+                  [disabled]="i === exercises().length - 1"
+                  title="Move down"
+                  class="w-8 h-8 text-xs border-2 border-zinc-700 text-zinc-500 hover:border-zinc-400 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-none flex items-center justify-center font-bold"
+                >▼</button>
+              </div>
+            </div>
+
+            <!-- Exercise identity bar -->
+            <div class="flex gap-4 p-4 bg-[#161616] border-b-2 border-zinc-700">
+              <!-- Thumbnail -->
+              @if (ex.gifUrl) {
+                <div class="flex-shrink-0 w-16 h-16 border-2 border-zinc-700 overflow-hidden bg-zinc-900">
+                  <img [src]="ex.gifUrl" [alt]="ex.exerciseName" class="w-full h-full object-cover" loading="lazy" />
+                </div>
+              }
+              <div class="flex-1 min-w-0 self-center">
+                <p class="font-black uppercase text-base text-white truncate leading-tight">{{ ex.exerciseName }}</p>
+                @if (ex.bodyPart) {
+                  <p class="text-xs text-yellow-400/80 uppercase mt-1 font-bold">{{ ex.bodyPart }}</p>
+                }
+                @if (ex.targetMuscles.length) {
+                  <p class="text-xs text-zinc-500 mt-0.5 truncate">{{ ex.targetMuscles.slice(0,3).join(' · ') }}</p>
+                }
+              </div>
+            </div>
+
+            <!-- Target sets/reps/weight -->
+            <div class="p-4 bg-[#0d0d0d]">
+              <p class="text-xs font-bold uppercase text-zinc-500 tracking-widest mb-3">DEFAULT TARGETS</p>
+              <div class="grid grid-cols-3 gap-3">
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-xs text-zinc-600 uppercase font-bold">SETS</label>
+                  <input
+                    type="number" min="1" max="20"
+                    [ngModel]="ex.targetSets"
+                    (ngModelChange)="updateExercise(i, 'targetSets', +$event)"
+                    class="w-full bg-[#111] border-2 border-zinc-700 focus:border-yellow-400 outline-none text-white font-mono py-3 text-center font-black text-lg"
+                  />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-xs text-zinc-600 uppercase font-bold">REPS</label>
+                  <input
+                    type="number" min="1" max="100"
+                    [ngModel]="ex.targetReps"
+                    (ngModelChange)="updateExercise(i, 'targetReps', +$event)"
+                    class="w-full bg-[#111] border-2 border-zinc-700 focus:border-yellow-400 outline-none text-white font-mono py-3 text-center font-black text-lg"
+                  />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-xs text-zinc-600 uppercase font-bold">KG</label>
+                  <input
+                    type="number" min="0" step="0.5"
+                    [ngModel]="ex.targetWeight"
+                    (ngModelChange)="updateExercise(i, 'targetWeight', +$event)"
+                    class="w-full bg-[#111] border-2 border-zinc-700 focus:border-yellow-400 outline-none text-white font-mono py-3 text-center font-black text-lg"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Remove -->
+            <div class="border-t-2 border-zinc-800 px-4 py-3 flex justify-end">
+              <button
+                (click)="removeExercise(i)"
+                class="text-xs text-red-500 hover:text-black font-bold uppercase border-2 border-red-500/40 hover:border-red-500 hover:bg-red-500 px-4 py-2.5 transition-none min-h-[44px]"
+              >
+                ✕ REMOVE EXERCISE
+              </button>
+            </div>
+
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Save / Cancel -->
+    <div class="border-t-4 border-zinc-700 pt-6 flex gap-4">
+      <button
+        (click)="save()"
+        [disabled]="!isValid()"
+        class="bg-yellow-400 text-black font-black uppercase px-6 py-4 border-4 border-yellow-400 hover:bg-black hover:text-yellow-400 transition-none flex-1 disabled:opacity-40 disabled:cursor-not-allowed text-sm tracking-wider min-h-[52px]"
+      >
+        ✓ SAVE WORKOUT
+      </button>
+      <button
+        (click)="cancel()"
+        class="bg-transparent text-zinc-400 font-bold uppercase px-6 py-4 border-2 border-zinc-700 hover:border-white hover:text-white transition-none text-sm min-h-[52px]"
+      >
+        CANCEL
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Exercise picker modal -->
+@if (showPicker()) {
+  <app-exercise-picker
+    (exerciseSelected)="onExerciseSelected($event)"
+    (closed)="closePicker()"
+  />
+}
+
+<!-- Cancel confirmation modal -->
+@if (showCancelConfirm()) {
+  <div class="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-6" (click)="confirmCancelDismiss()">
+    <div class="border-4 border-zinc-500 bg-[#111] w-full max-w-sm font-mono" (click)="$event.stopPropagation()">
+      <div class="border-b-4 border-zinc-500 px-6 py-4 flex items-center gap-3">
+        <span class="text-zinc-400 text-2xl font-black">←</span>
+        <h3 class="text-white font-black uppercase text-xl">DISCARD CHANGES?</h3>
+      </div>
+      <div class="px-6 py-5">
+        <p class="text-zinc-300 text-sm leading-relaxed">
+          Your unsaved changes will be lost. Are you sure you want to go back?
+        </p>
+      </div>
+      <div class="border-t-2 border-zinc-700 px-6 py-4 flex gap-3">
+        <button
+          (click)="confirmCancelExecute()"
+          class="bg-zinc-700 text-white font-black uppercase px-5 py-3 border-2 border-zinc-600 hover:bg-zinc-600 transition-none flex-1 text-sm min-h-[48px]"
+        >
+          DISCARD
+        </button>
+        <button
+          (click)="confirmCancelDismiss()"
+          class="bg-yellow-400 text-black font-black uppercase px-5 py-3 border-4 border-yellow-400 hover:bg-black hover:text-yellow-400 transition-none flex-1 text-sm min-h-[48px]"
+        >
+          KEEP EDITING
+        </button>
+      </div>
+    </div>
+  </div>
+}

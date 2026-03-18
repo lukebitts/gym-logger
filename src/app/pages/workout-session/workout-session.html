@@ -1,0 +1,264 @@
+@if (session(); as s) {
+<div class="min-h-screen bg-[#0a0a0a] text-white font-mono pb-32">
+
+  <!-- Sticky header -->
+  <div class="sticky top-0 z-10 bg-[#0a0a0a] border-b-4 border-yellow-400 px-5 py-4 flex items-center justify-between gap-4">
+    <div class="min-w-0">
+      <p class="text-xs text-zinc-500 uppercase tracking-widest">// active workout</p>
+      <h1 class="text-xl font-black uppercase tracking-tight text-yellow-400 truncate">{{ s.workoutName }}</h1>
+      <p class="text-xs text-zinc-600 mt-0.5">
+        {{ totalSetsLogged() }} set{{ totalSetsLogged() !== 1 ? 's' : '' }} logged
+      </p>
+    </div>
+    <div class="flex gap-2 flex-shrink-0">
+      <button
+        (click)="confirmSave()"
+        class="bg-yellow-400 text-black font-black uppercase px-5 py-3 border-4 border-yellow-400 hover:bg-black hover:text-yellow-400 transition-none text-xs min-h-[44px]"
+      >
+        ✓ SAVE
+      </button>
+      <button
+        (click)="confirmCancel()"
+        class="border-2 border-red-500/60 text-red-500 hover:bg-red-500 hover:text-black font-bold uppercase px-5 py-3 transition-none text-xs min-h-[44px]"
+      >
+        ✕ CANCEL
+      </button>
+    </div>
+  </div>
+
+  <!-- Exercise list -->
+  <div class="p-5 flex flex-col gap-10">
+    @for (exercise of s.exercises; track exercise.exerciseId; let ei = $index) {
+
+      <!-- Exercise section separator -->
+      <div>
+        <div class="flex items-center gap-4 mb-4">
+          <span class="text-xs font-black text-zinc-600 font-mono whitespace-nowrap">{{ ei + 1 < 10 ? '0' + (ei + 1) : (ei + 1) }} /{{ s.exercises.length < 10 ? '0' + s.exercises.length : s.exercises.length }}</span>
+          <div class="flex-1 border-t-2 border-zinc-800"></div>
+        </div>
+
+        <div class="border-2 border-zinc-700 bg-[#111]">
+
+          <!-- ── Exercise name ─────────────────────────────── -->
+          <div class="bg-[#1a1a1a] border-b-2 border-zinc-700 px-5 py-4">
+            <h2 class="font-black uppercase text-lg text-white tracking-tight leading-tight">
+              {{ exercise.exerciseName }}
+            </h2>
+            <p class="text-xs text-zinc-500 mt-1 font-mono">
+              TARGET
+              <span class="text-yellow-400/80 font-bold ml-1">
+                {{ exercise.targetSets }} sets × {{ exercise.targetReps }} reps
+                @if (exercise.targetWeight > 0) { @ {{ exercise.targetWeight }}kg }
+              </span>
+            </p>
+          </div>
+
+          <!-- ── PR & Last Time ─────────────────────────────── -->
+          <div class="grid grid-cols-2 border-b-2 border-zinc-700">
+            <!-- Personal Record -->
+            <div class="px-4 py-4 border-r-2 border-zinc-700">
+              <p class="text-xs font-black uppercase tracking-widest text-zinc-500 mb-2">🏆 PERSONAL RECORD</p>
+              @if (getPersonalRecord(exercise.exerciseId); as pr) {
+                <p class="text-base font-black text-yellow-400 leading-tight">
+                  {{ pr.reps }} reps × {{ pr.weight }}kg
+                </p>
+                <p class="text-xs text-zinc-600 mt-1 font-mono">
+                  {{ (pr.weight * pr.reps).toFixed(0) }} total vol
+                </p>
+              } @else {
+                <p class="text-sm text-zinc-600 italic">No record yet</p>
+              }
+            </div>
+            <!-- Last time -->
+            <div class="px-4 py-4">
+              <p class="text-xs font-black uppercase tracking-widest text-zinc-500 mb-2">📅 LAST TIME</p>
+              @if (getLastTime(exercise.exerciseId); as last) {
+                <p class="text-xs text-zinc-400 font-bold mb-1">{{ formatDate(last.completedAt) }}</p>
+                @for (set of last.sets; track $index) {
+                  <p class="text-xs text-zinc-300 font-mono leading-snug">
+                    S{{ $index + 1 }}: {{ set.reps }}r × {{ set.weight }}kg
+                  </p>
+                }
+              } @else {
+                <p class="text-sm text-zinc-600 italic">Never done</p>
+              }
+            </div>
+          </div>
+
+          <!-- ── Logged Sets ────────────────────────────────── -->
+          <div class="border-b-2 border-zinc-700">
+            <div class="flex items-center justify-between px-5 py-3 bg-[#161616] border-b-2 border-zinc-800">
+              <p class="text-xs font-black uppercase tracking-widest text-zinc-400">SETS LOGGED</p>
+              <span class="text-xs font-mono text-zinc-600">{{ exercise.loggedSets.length }}</span>
+            </div>
+
+            @if (exercise.loggedSets.length === 0) {
+              <div class="px-5 py-5 text-center">
+                <p class="text-xs text-zinc-700 uppercase tracking-widest">No sets logged yet</p>
+              </div>
+            } @else {
+              <div class="flex flex-col">
+                @for (set of exercise.loggedSets; track $index; let si = $index) {
+                  <div class="flex items-center gap-3 px-5 py-3 border-b border-zinc-800 last:border-b-0">
+                    <!-- Set number badge -->
+                    <span class="flex-shrink-0 w-8 h-8 bg-zinc-800 border-2 border-zinc-600 flex items-center justify-center text-xs font-black text-zinc-400">
+                      {{ si + 1 }}
+                    </span>
+                    <!-- Set data -->
+                    <div class="flex-1">
+                      <span class="text-base font-black text-white">{{ set.reps }} reps</span>
+                      <span class="text-zinc-500 mx-1.5 font-bold">×</span>
+                      <span class="text-base font-black text-white">{{ set.weight }}kg</span>
+                      <span class="text-xs text-zinc-600 ml-2 font-mono">
+                        ({{ (set.weight * set.reps).toFixed(0) }} vol)
+                      </span>
+                    </div>
+                    <!-- Remove button -->
+                    <button
+                      (click)="removeSet(exercise.exerciseId, si)"
+                      class="flex-shrink-0 text-xs text-red-500/60 hover:text-red-400 border border-red-500/30 hover:border-red-400 w-9 h-9 flex items-center justify-center font-bold transition-none"
+                      title="Remove set"
+                    >✕</button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- ── Log New Set ────────────────────────────────── -->
+          <div class="px-5 py-4 bg-[#0d0d0d]">
+            <p class="text-xs font-black uppercase tracking-widest text-zinc-400 mb-3">
+              LOG SET {{ exercise.loggedSets.length + 1 }}
+            </p>
+            <div class="flex gap-3 items-end">
+              <div class="flex flex-col gap-1.5 flex-1">
+                <label class="text-xs text-zinc-600 uppercase font-bold">REPS</label>
+                <input
+                  type="number" min="1"
+                  [ngModel]="getDraft(exercise.exerciseId).reps"
+                  (ngModelChange)="updateDraftReps(exercise.exerciseId, +$event)"
+                  class="w-full bg-[#111] border-2 border-zinc-700 focus:border-yellow-400 outline-none text-white font-mono py-3 text-center font-black text-2xl"
+                />
+              </div>
+              <span class="text-zinc-600 font-black text-xl pb-3">×</span>
+              <div class="flex flex-col gap-1.5 flex-1">
+                <label class="text-xs text-zinc-600 uppercase font-bold">KG</label>
+                <input
+                  type="number" min="0" step="0.5"
+                  [ngModel]="getDraft(exercise.exerciseId).weight"
+                  (ngModelChange)="updateDraftWeight(exercise.exerciseId, +$event)"
+                  class="w-full bg-[#111] border-2 border-zinc-700 focus:border-yellow-400 outline-none text-white font-mono py-3 text-center font-black text-2xl"
+                />
+              </div>
+              <button
+                (click)="addSet(exercise.exerciseId)"
+                class="bg-yellow-400 text-black font-black uppercase px-5 py-3 border-4 border-yellow-400 hover:bg-black hover:text-yellow-400 transition-none text-sm h-[54px] min-w-[70px]"
+              >
+                + LOG
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- ── Fixed timer bar ────────────────────────────────────── -->
+<div class="fixed bottom-0 left-0 right-0 z-20 bg-[#111] border-t-4 border-zinc-700 px-5 py-3 flex items-center justify-between gap-4 font-mono">
+  <div class="flex items-center gap-3">
+    <div
+      class="text-3xl font-black tabular-nums w-24"
+      [class.text-yellow-400]="timerRunning()"
+      [class.text-zinc-600]="!timerRunning()"
+    >
+      {{ formatTimer(timerSeconds()) }}
+    </div>
+    <p class="text-xs text-zinc-600 uppercase tracking-widest hidden sm:block">REST TIMER</p>
+  </div>
+  <div class="flex gap-2">
+    <button
+      (click)="startTimer()"
+      [disabled]="timerRunning()"
+      class="bg-yellow-400 text-black font-black uppercase px-5 py-3 border-4 border-yellow-400 hover:bg-black hover:text-yellow-400 transition-none text-xs disabled:opacity-30 disabled:cursor-not-allowed min-h-[44px]"
+    >
+      ▶ START
+    </button>
+    <button
+      (click)="stopTimer()"
+      [disabled]="!timerRunning()"
+      class="border-2 border-zinc-600 text-zinc-400 hover:border-white hover:text-white font-bold uppercase px-5 py-3 transition-none text-xs disabled:opacity-30 disabled:cursor-not-allowed min-h-[44px]"
+    >
+      ■ STOP
+    </button>
+  </div>
+</div>
+
+} @else {
+  <div class="min-h-screen bg-[#0a0a0a] flex items-center justify-center font-mono">
+    <p class="text-zinc-600 uppercase tracking-widest">Loading session...</p>
+  </div>
+}
+
+<!-- ── Save confirmation modal ───────────────────────────── -->
+@if (showSaveConfirm()) {
+  <div class="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-6" (click)="dismissDialogs()">
+    <div class="border-4 border-yellow-400 bg-[#111] w-full max-w-sm font-mono" (click)="$event.stopPropagation()">
+      <div class="border-b-4 border-yellow-400 px-6 py-4 flex items-center gap-3">
+        <span class="text-yellow-400 text-2xl">✓</span>
+        <h3 class="text-yellow-400 font-black uppercase text-xl">SAVE WORKOUT?</h3>
+      </div>
+      <div class="px-6 py-5">
+        <p class="text-zinc-300 text-sm leading-relaxed">
+          {{ totalSetsLogged() }} set(s) will be saved to your history and this session will end.
+        </p>
+      </div>
+      <div class="border-t-2 border-zinc-700 px-6 py-4 flex gap-3">
+        <button
+          (click)="executeSave()"
+          class="bg-yellow-400 text-black font-black uppercase px-5 py-3 border-4 border-yellow-400 hover:bg-black hover:text-yellow-400 transition-none flex-1 text-sm min-h-[48px]"
+        >
+          SAVE SESSION
+        </button>
+        <button
+          (click)="dismissDialogs()"
+          class="border-2 border-zinc-600 text-zinc-400 hover:border-white hover:text-white font-bold uppercase px-5 py-3 transition-none flex-1 text-sm min-h-[48px]"
+        >
+          BACK
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── Cancel confirmation modal ─────────────────────────── -->
+@if (showCancelConfirm()) {
+  <div class="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-6" (click)="dismissDialogs()">
+    <div class="border-4 border-red-500 bg-[#111] w-full max-w-sm font-mono" (click)="$event.stopPropagation()">
+      <div class="border-b-4 border-red-500 px-6 py-4 flex items-center gap-3">
+        <span class="text-red-500 text-2xl font-black">✕</span>
+        <h3 class="text-red-500 font-black uppercase text-xl">CANCEL WORKOUT?</h3>
+      </div>
+      <div class="px-6 py-5">
+        <p class="text-zinc-300 text-sm leading-relaxed">
+          All progress in this session will be discarded. This cannot be undone.
+        </p>
+      </div>
+      <div class="border-t-2 border-zinc-700 px-6 py-4 flex gap-3">
+        <button
+          (click)="executeCancel()"
+          class="bg-red-500 text-black font-black uppercase px-5 py-3 border-4 border-red-500 hover:bg-black hover:text-red-500 transition-none flex-1 text-sm min-h-[48px]"
+        >
+          DISCARD SESSION
+        </button>
+        <button
+          (click)="dismissDialogs()"
+          class="border-2 border-zinc-600 text-zinc-400 hover:border-white hover:text-white font-bold uppercase px-5 py-3 transition-none flex-1 text-sm min-h-[48px]"
+        >
+          KEEP GOING
+        </button>
+      </div>
+    </div>
+  </div>
+}

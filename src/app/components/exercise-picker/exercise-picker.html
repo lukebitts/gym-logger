@@ -1,0 +1,125 @@
+<div class="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4" (click)="close()">
+  <div
+    class="border-4 border-yellow-400 bg-[#111] w-full max-w-2xl font-mono flex flex-col"
+    style="max-height: 90vh"
+    (click)="$event.stopPropagation()"
+  >
+
+    <!-- Modal header -->
+    <div class="flex items-center justify-between border-b-4 border-yellow-400 px-5 py-4 flex-shrink-0">
+      <div>
+        <p class="text-xs text-zinc-500 uppercase tracking-widest mb-0.5">// search database</p>
+        <h2 class="font-black uppercase text-yellow-400 text-xl tracking-tight">ADD EXERCISE</h2>
+      </div>
+      <button
+        (click)="close()"
+        class="text-zinc-400 hover:text-white font-bold text-lg w-9 h-9 flex items-center justify-center border-2 border-zinc-600 hover:border-white transition-none"
+        title="Close"
+      >×</button>
+    </div>
+
+    <!-- Search bar -->
+    <div class="px-5 py-4 border-b-2 border-zinc-700 flex-shrink-0">
+      <input
+        type="text"
+        [ngModel]="query()"
+        (ngModelChange)="onQueryChange($event)"
+        placeholder="Type to search by exercise name..."
+        class="w-full bg-[#0a0a0a] border-2 border-zinc-600 focus:border-yellow-400 outline-none text-white font-mono px-4 py-3 text-sm placeholder:text-zinc-600"
+        autofocus
+      />
+    </div>
+
+    <!-- Scrollable results area -->
+    <div class="flex-1 overflow-y-auto min-h-0">
+
+      <!-- Loading -->
+      @if (loading()) {
+        <div class="p-10 text-center text-zinc-500 uppercase text-xs tracking-widest animate-pulse">
+          Searching...
+        </div>
+      }
+
+      <!-- Error -->
+      @if (error() && !loading()) {
+        <div class="mx-5 mt-5 border-2 border-red-500/40 bg-red-500/10 px-4 py-3 text-red-400 text-xs uppercase">
+          ⚠ Failed to load exercises. Check your connection.
+        </div>
+      }
+
+      <!-- Prompt -->
+      @if (!loading() && !error() && query().length < 2) {
+        <div class="p-12 text-center">
+          <p class="text-zinc-500 text-sm uppercase tracking-widest font-bold">Search exercises</p>
+          <p class="text-zinc-700 text-xs mt-2">Type at least 2 characters to search by name</p>
+        </div>
+      }
+
+      <!-- No results -->
+      @if (!loading() && !error() && query().length >= 2 && results().length === 0) {
+        <div class="p-12 text-center">
+          <p class="text-zinc-500 text-sm uppercase tracking-widest font-bold">NO RESULTS</p>
+          <p class="text-zinc-700 text-xs mt-2">Try a different search term</p>
+        </div>
+      }
+
+      <!-- Results list -->
+      @if (results().length > 0) {
+        @for (exercise of results(); track exercise.exerciseId) {
+          <button
+            (click)="select(exercise)"
+            class="w-full flex gap-4 px-5 py-4 border-b-2 border-zinc-800 hover:bg-zinc-800 hover:border-yellow-400 text-left transition-none group"
+          >
+            <!-- Thumbnail -->
+            <div class="flex-shrink-0 w-16 h-16 border-2 border-zinc-700 group-hover:border-yellow-400 overflow-hidden bg-zinc-900 flex items-center justify-center">
+              @if (exercise.imageUrl) {
+                <img
+                  [src]="exercise.imageUrl"
+                  [alt]="exercise.name"
+                  class="w-full h-full object-cover"
+                  loading="lazy"
+                  (error)="$any($event.target).style.display='none'"
+                />
+              } @else {
+                <span class="text-zinc-700 text-xs font-bold">IMG</span>
+              }
+            </div>
+            <!-- Info -->
+            <div class="flex-1 min-w-0 self-center">
+              <p class="font-black uppercase text-sm text-white group-hover:text-yellow-400 truncate leading-tight">
+                {{ exercise.name }}
+              </p>
+              <div class="flex flex-wrap gap-1 mt-1.5">
+                @for (part of exercise.bodyParts; track $index) {
+                  <span class="text-xs bg-zinc-900 border border-zinc-700 text-yellow-400/80 px-1.5 py-0.5 font-bold uppercase">
+                    {{ part }}
+                  </span>
+                }
+                @for (muscle of exercise.targetMuscles.slice(0,2); track $index) {
+                  <span class="text-xs bg-zinc-900 border border-zinc-700 text-zinc-400 px-1.5 py-0.5 uppercase">
+                    {{ muscle }}
+                  </span>
+                }
+              </div>
+            </div>
+            <span class="flex-shrink-0 text-zinc-600 group-hover:text-yellow-400 font-black self-center text-lg">→</span>
+          </button>
+        }
+
+        <!-- Load more -->
+        @if (hasNextPage()) {
+          <div class="p-5 text-center border-t-2 border-zinc-800">
+            <button
+              (click)="loadMore()"
+              [disabled]="loading()"
+              class="border-2 border-zinc-600 text-zinc-400 hover:border-yellow-400 hover:text-yellow-400 px-5 py-2.5 text-xs uppercase font-bold transition-none disabled:opacity-50"
+            >
+              LOAD MORE ({{ results().length }} / {{ total() }})
+            </button>
+          </div>
+        }
+      }
+    </div>
+
+  </div>
+</div>

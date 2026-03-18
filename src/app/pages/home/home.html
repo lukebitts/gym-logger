@@ -1,0 +1,171 @@
+<!-- Active session banner -->
+@if (activeSession()) {
+  <div class="fixed top-0 left-0 right-0 z-50 bg-yellow-400 text-black px-5 py-3 flex items-center justify-between border-b-4 border-black font-mono font-bold text-sm">
+    <span>⚡ ACTIVE SESSION: {{ activeSession()!.workoutName }}</span>
+    <button
+      (click)="resumeSession()"
+      class="bg-black text-yellow-400 px-5 py-2 border-2 border-black hover:bg-yellow-400 hover:text-black transition-none font-bold uppercase text-xs min-h-[38px]"
+    >
+      RESUME →
+    </button>
+  </div>
+}
+
+<div class="min-h-screen bg-[#0a0a0a] text-white font-mono" [class.pt-12]="activeSession()">
+
+  <!-- Header -->
+  <div class="border-b-4 border-yellow-400 px-6 py-5 flex items-center justify-between">
+    <div>
+      <h1 class="text-4xl font-black uppercase tracking-tight text-yellow-400">GYM LOG</h1>
+      <p class="text-zinc-500 text-xs mt-1 uppercase tracking-widest">// workout tracker</p>
+    </div>
+    <button
+      (click)="addWorkout()"
+      class="bg-yellow-400 text-black font-black uppercase px-6 py-3 border-4 border-yellow-400 hover:bg-black hover:text-yellow-400 transition-none text-sm tracking-wider min-h-[48px]"
+    >
+      + ADD WORKOUT
+    </button>
+  </div>
+
+  <!-- Content -->
+  <div class="p-6">
+
+    <!-- Section heading -->
+    <div class="flex items-center gap-4 mb-6">
+      <h2 class="text-xs font-black uppercase tracking-widest text-zinc-500 whitespace-nowrap">MY WORKOUTS</h2>
+      <div class="flex-1 border-t-2 border-zinc-800"></div>
+      @if (workouts().length > 0) {
+        <span class="text-xs font-mono text-zinc-600 whitespace-nowrap">{{ workouts().length }} total</span>
+      }
+    </div>
+
+    <!-- Empty state -->
+    @if (workouts().length === 0) {
+      <div class="border-4 border-dashed border-zinc-700 p-16 text-center mt-4">
+        <p class="text-zinc-400 uppercase tracking-widest text-base font-bold">NO WORKOUTS YET</p>
+        <p class="text-zinc-600 text-sm mt-3">Click "+ ADD WORKOUT" to get started</p>
+      </div>
+    }
+
+    <!-- Workout cards -->
+    <div class="flex flex-col gap-6">
+      @for (workout of workouts(); track workout.id; let i = $index) {
+        <div class="border-2 border-zinc-700 hover:border-zinc-500 transition-none bg-[#111]">
+
+          <!-- Card index strip -->
+          <div class="bg-zinc-900 border-b-2 border-zinc-700 px-5 py-1.5 flex items-center gap-3">
+            <span class="text-xs font-black text-zinc-600 font-mono">{{ i + 1 < 10 ? '0' + (i + 1) : (i + 1) }}</span>
+            <div class="flex-1 border-t border-zinc-800"></div>
+          </div>
+
+          <!-- Card header -->
+          <div class="flex items-start justify-between p-5 gap-4">
+            <div class="flex-1 min-w-0">
+              <h2 class="text-xl font-black uppercase text-white tracking-tight truncate">
+                {{ workout.name }}
+              </h2>
+              <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                <p class="text-xs text-zinc-500 uppercase tracking-wider">
+                  <span class="text-yellow-400 font-bold">MUSCLES</span>
+                  <span class="text-zinc-600 mx-1">|</span>
+                  {{ getMuscles(workout) }}
+                </p>
+              </div>
+              <p class="text-xs text-zinc-600 mt-1.5">
+                {{ workout.exercises.length }} exercise{{ workout.exercises.length !== 1 ? 's' : '' }}
+              </p>
+            </div>
+            <button
+              (click)="toggleExpand(workout.id)"
+              class="flex-shrink-0 border-2 px-5 py-3 text-xs uppercase font-bold transition-none min-h-[44px]"
+              [class]="expandedId() === workout.id
+                ? 'border-yellow-400 text-yellow-400 bg-yellow-400/10'
+                : 'border-zinc-600 text-zinc-400 hover:border-zinc-300 hover:text-zinc-300'"
+            >
+              {{ expandedId() === workout.id ? 'HIDE ▲' : 'DETAILS ▼' }}
+            </button>
+          </div>
+
+          <!-- Expanded section -->
+          @if (expandedId() === workout.id) {
+            <!-- Exercise list -->
+            @if (workout.exercises.length > 0) {
+              <div class="border-t-2 border-zinc-700 bg-[#0d0d0d]">
+                <p class="px-5 pt-4 pb-2 text-xs font-bold uppercase text-zinc-500 tracking-widest">Exercises</p>
+                <div class="flex flex-col">
+                  @for (ex of workout.exercises; track ex.exerciseId; let i = $index) {
+                    <div class="flex items-center gap-3 px-5 py-3 border-t border-zinc-800">
+                      <span class="text-xs text-zinc-600 w-5 text-right font-mono">{{ i + 1 }}.</span>
+                      <span class="flex-1 text-sm font-bold uppercase text-zinc-200">{{ ex.exerciseName }}</span>
+                      <span class="text-xs font-mono text-zinc-500 bg-zinc-900 border border-zinc-700 px-2 py-1">
+                        {{ ex.targetSets }}×{{ ex.targetReps }}
+                        @if (ex.targetWeight > 0) { @ {{ ex.targetWeight }}kg }
+                      </span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- Actions -->
+            <div class="border-t-2 border-zinc-700 p-5 flex gap-3 flex-wrap bg-[#0a0a0a]">
+              <button
+                (click)="startWorkout(workout)"
+                class="bg-yellow-400 text-black font-black uppercase px-6 py-3 border-4 border-yellow-400 hover:bg-black hover:text-yellow-400 transition-none text-sm tracking-wider min-h-[48px]"
+              >
+                ▶ START WORKOUT
+              </button>
+              <button
+                (click)="editWorkout(workout.id)"
+                class="bg-transparent text-white font-bold uppercase px-5 py-3 border-2 border-zinc-500 hover:border-white hover:bg-white hover:text-black transition-none text-sm min-h-[48px]"
+              >
+                ✎ EDIT
+              </button>
+              <button
+                (click)="confirmDelete(workout.id)"
+                class="bg-transparent text-red-500 font-bold uppercase px-5 py-3 border-2 border-red-500/50 hover:border-red-500 hover:bg-red-500 hover:text-black transition-none text-sm ml-auto min-h-[48px]"
+              >
+                ✕ DELETE
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirmation modal -->
+@if (deleteTargetId()) {
+  <div class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6" (click)="cancelDelete()">
+    <div class="border-4 border-red-500 bg-[#111] w-full max-w-sm font-mono" (click)="$event.stopPropagation()">
+      <!-- Modal header -->
+      <div class="border-b-4 border-red-500 px-6 py-4 flex items-center gap-3">
+        <span class="text-red-500 text-2xl font-black">✕</span>
+        <h3 class="text-red-500 font-black uppercase text-xl">DELETE WORKOUT?</h3>
+      </div>
+      <!-- Modal body -->
+      <div class="px-6 py-5">
+        <p class="text-zinc-300 text-sm leading-relaxed">
+          This workout and its configuration will be permanently removed.
+          Your past session history for this workout will be kept.
+        </p>
+      </div>
+      <!-- Modal actions -->
+      <div class="border-t-2 border-zinc-700 px-6 py-4 flex gap-3">
+        <button
+          (click)="executeDelete()"
+          class="bg-red-500 text-black font-black uppercase px-5 py-3 border-4 border-red-500 hover:bg-black hover:text-red-500 transition-none flex-1 text-sm min-h-[48px]"
+        >
+          YES, DELETE
+        </button>
+        <button
+          (click)="cancelDelete()"
+          class="bg-transparent text-zinc-300 font-bold uppercase px-5 py-3 border-2 border-zinc-600 hover:border-white hover:text-white transition-none flex-1 text-sm min-h-[48px]"
+        >
+          CANCEL
+        </button>
+      </div>
+    </div>
+  </div>
+}
